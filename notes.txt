@@ -1,0 +1,52 @@
+Questions that the server has to answer:
+- Which projects exist?
+    * given name
+    * slug / URL to project page
+    * Original size
+    * Start time
+    * last update
+    * (Steps taken?)
+    * (URL for current smallest reproducer)
+    * (URL for next guess)
+    * Button: Delete project (including file!)
+- current smallest reproducer: Just the data itself
+- next guess: Just the data itself
+- project page:
+    * BOTTOM: log of versions and their responses
+    * Buttons: "Bug present", "Bug absent"
+    * Button: "Download current"
+    * Must be able to "roll back" somehow
+        -> Project tracks the currently active "version" ID (which is not always the newest)
+
+How to go about it:
+- "raw" HTML can be several MB, must be able to deal with it
+    * Idea: "state" can be "file + short list of ranges"
+        * Range must be marked whether removing it is *KNOWN* to cause issues
+- How to recurse? Which range to remove?
+    * If an "unknown" range exists, pick a longest one.
+    * Otherwise, pick a longest range, split it in two (equally???), mark as "unknown", pick either side.
+- Problem: Can't really "restart" if too many ranges exist. But in that case, all
+    ranges are marked as "known to cause issues (= bug absent) when removed",
+    so that either shouldn't happen or is a pathological case anyway.
+
+So what is in the DB:
+- List of Projects
+- Each project has:
+    * currently active version
+    * huge file (-> directory, not db!)
+    * given name (i.e. filename)
+    * slug
+    * implicit: Original size
+    * upload time
+    * implicit: last update
+    * implicit: Steps taken
+    * implicit: URL for current smallest reproducer
+    * implicit: URL for next guess (constant; meaning derived from currently active version)
+- Each version has:
+    * optional: parent version
+    * optional: user decision
+    * parent project
+    * amount of times loaded, last load datetime
+    * time created
+    * time decided
+
