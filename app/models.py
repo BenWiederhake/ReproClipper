@@ -5,6 +5,10 @@ MAX_LENGTH_FILENAME = 200
 FILE_UPLOAD_STRFTIME = "uploads/%Y/%m/%d/"
 
 
+def impossible():
+    return None  # Would yield a ConsistencyError upon insertion
+
+
 class ClipProject(models.Model):
     project_name: models.Field = models.TextField()
     slug: models.Field = models.SlugField(max_length=MAX_SLUG_LENGTH)
@@ -20,7 +24,7 @@ class ClipVersion(models.Model):
     parent_version: models.Field = models.ForeignKey(to="self", on_delete=models.RESTRICT, null=True)
     bug_present: models.Field = models.BooleanField(null=True, default=None)
     amount_of_times_loaded: models.Field = models.IntegerField(default=0)
-    segment_list: models.Field = models.JSONField(default=list)
+    span_list_converted_to_str: models.Field = models.TextField(default=impossible)
     last_datetime_loaded: models.Field = models.DateTimeField(null=True, default=None)
     created_datetime: models.Field = models.DateTimeField(auto_now_add=True)
     decided_datetime: models.Field = models.DateTimeField(null=True, default=None)

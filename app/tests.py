@@ -45,21 +45,22 @@ class LogicTests(TestCase):
                 slug = logic.slugify_name(file_name)
                 self.assertEqual(slug[:-4], expected_prefix, slug)
 
-    def testSegmentsCover(self) -> None:
+    def testSpansCover(self) -> None:
         for length in range(1000):
             with self.subTest(length=length):
-                segments = logic.make_segment_list(length)
+                spans: logic.Spans = logic.make_span_list(length)
                 total_length = 0
-                for i, seg in enumerate(segments):
-                    total_length += seg[0]
-                    self.assertEqual(seg[1], logic.SpanInclusion.Untested, i)
+                for i, span in enumerate(spans):
+                    total_length += span[0]
+                    self.assertEqual(span[1], logic.SpanInclusion.Untested, i)
                 self.assertEqual(total_length, length)
 
-    def testSegmentsMeaningfulLarge(self) -> None:
-        segments_raw = logic.make_segment_list(123456)
-        seg_actual = [seg[0] for seg in segments_raw]
+    def testSpansMeaningfulLarge(self) -> None:
+        spans_raw = logic.make_span_list(123456)
+        self.assertTrue(all(span[1] == logic.SpanInclusion.Untested for span in spans_raw))
+        lengths_actual = [s[0] for s in spans_raw]
         # Hardcoded values, taken trom the actual output and sanity-checked by applying my eyeballs.
-        seg_expected = [
+        lengths_expected = [
             59,
             154,
             403,
@@ -76,4 +77,4 @@ class LogicTests(TestCase):
             154,
             59,
         ]
-        self.assertEqual(seg_expected, seg_actual)
+        self.assertEqual(lengths_expected, lengths_actual)

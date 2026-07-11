@@ -32,13 +32,13 @@ def new_project(request):
             project.save()
 
             # Next, create a "full" version, i.e. with all the data in it:
-            seg_list = logic.make_segment_list(cleaned_data["file"].size)
+            span_list = logic.make_span_list(cleaned_data["file"].size)
             version = models.ClipVersion(
                 parent_project=project,
                 parent_version=None,
                 bug_present=True,  # Otherwise, project wouldn't have started
                 amount_of_times_loaded=0,
-                segment_list=seg_list,
+                span_list_converted_to_str=logic.spans_encode(span_list),
                 last_datetime_loaded=None,
                 # created_datetime is automatic
                 decided_datetime=now(),
