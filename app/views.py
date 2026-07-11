@@ -48,7 +48,8 @@ def new_project(request):
             project.save()
 
             # Finally, create the first test version (this overwrites project.current_version):
-            logic.create_new_version(version, bug_present=True)
+            sub_version = logic.create_new_unsaved_version(version)
+            sub_version.save()
 
             project_url = reverse("project_index", kwargs=dict(project_slug=project.slug))
             return HttpResponseRedirect(project_url)

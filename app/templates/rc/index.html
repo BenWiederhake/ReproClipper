@@ -9,7 +9,7 @@
 <ul>
   {% for project in projects_sorted %}
   <li>
-    <a href="{% url 'project_index' project.slug %}">"{{project.project_name}}" (uploaded {{project.upload_datetime}})</a> ({{ project.clip_version_set|length }} versions)
+    <a href="{% url 'project_index' project.slug %}">"{{project.project_name}}" (uploaded {{project.upload_datetime}})</a> ({{ project.clipversion_set.all|length }} versions)
   </li>
   {% endfor %}
 </ul>

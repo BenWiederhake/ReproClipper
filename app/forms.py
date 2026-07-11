@@ -1,4 +1,5 @@
 from django import forms
+from django.core.exceptions import ValidationError
 
 from . import logic, models
 
@@ -9,9 +10,9 @@ class NewProjectForm(forms.Form):
     # base_file = models.FileField(upload_to=FILE_UPLOAD_STRFTIME, max_length=MAX_LENGTH_FILENAME)
     # upload_datetime = models.DateTimeField(auto_now_add=True)
 
+    file = forms.FileField()
     name = forms.CharField(label="Project name", max_length=100, required=False)
     slug = forms.SlugField(label="Slug", max_length=20, required=False)
-    file = forms.FileField()
 
     def clean(self):
         cleaned_data = super().clean()
