@@ -4,8 +4,9 @@
 
 {% block content %}
 <p><a href="{% url 'new_project' %}">Create new project</a>.</p>
-<p>Currectly {{projects_sorted|length}} projects configured:</p>
+<p>Currectly {{projects_sorted|length}} projects configured.</p>
 
+{% if projects_sorted %}
 <ul>
   {% for project in projects_sorted %}
   <li>
@@ -13,4 +14,7 @@
   </li>
   {% endfor %}
 </ul>
+{% else %}
+<p>Nothing here! Create a new project, maybe?</p>
+{% endif %}
 {% endblock %}

@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
@@ -120,3 +121,15 @@ def specific_version(request, project_slug: str, version_id: int):
     content = logic.reconstruct_content(version)
     return HttpResponse(content)
     # amount_of_times_loaded: models.Field = models.IntegerField(default=0)
+
+
+def project_delete(request, project_slug: str):
+    project: models.ClipProject = get_object_or_404(models.ClipProject, slug=project_slug)
+    if request.method == "POST":
+        with transaction.atomic():
+            project.current_version = None
+            project.save()
+            project.clipversion_set.all().delete()  # type: ignore[attr-defined]
+            project.delete()
+        return HttpResponseRedirect(reverse("index"))
+    return render(request, "rc/project_delete.html", {"project": project})

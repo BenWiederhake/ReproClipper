@@ -49,4 +49,5 @@
   </li>
   {% endfor %}
 </ul>
+<p style="color:gray;">Maybe you want to <a href="{% url 'project_delete' project.slug %}">delete</a> this?</p>
 {% endblock %}

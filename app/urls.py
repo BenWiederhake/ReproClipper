@@ -4,6 +4,7 @@ from . import views
 
 project_patterns = [
     path("", views.project_index, name="project_index"),
+    path("delete", views.project_delete, name="project_delete"),
     path("next_open", views.next_open, name="next_open"),
     path("v/<int:version_id>/", views.specific_version, name="specific_version"),
 ]

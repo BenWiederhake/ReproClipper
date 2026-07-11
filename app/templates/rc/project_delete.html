@@ -1,0 +1,17 @@
+{% extends "rc/common.html" %}
+
+{% block title %}DELETION{% endblock %}
+
+{% block content %}
+<a href="{% url 'index' %}">← Back to overview</a>
+<h1>DELETING Project "{{project.project_name}}"</h1>
+<p>This will IRREVERSIBLY delete the project "{{project.project_name}}".</p>
+<p>Originally {{project.base_file.size}} bytes, {{project.clipversion_set.all|length}} versions, started {{project.upload_datetime}}, stored file at "{{project.base_file.name}}".</p>
+<p>ARE YOU CERTAIN YOU WANT TO DELETE THIS PROJECT?</p>
+<div style="background-color:red;height:100pt;">
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn-bug-absent">FINAL CLICK FOR DELETE</button>
+</form>
+</div>
+{% endblock %}
