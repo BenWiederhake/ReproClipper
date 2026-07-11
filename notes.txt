@@ -1,5 +1,5 @@
 Questions that the server has to answer:
-- Which projects exist?
+- Which projects exist? /index.html
     * given name
     * slug / URL to project page
     * Original size
@@ -9,9 +9,9 @@ Questions that the server has to answer:
     * (URL for current smallest reproducer)
     * (URL for next guess)
     * Button: Delete project (including file!)
-- current smallest reproducer: Just the data itself
-- next guess: Just the data itself
-- project page:
+- current smallest reproducer: Just the data itself  /p/<SLUG>/v/<VERSION>/
+- next guess: Just the data itself /p/<SLUG>/open
+- project page: /p/<SLUG>/index.html
     * BOTTOM: log of versions and their responses
     * Buttons: "Bug present", "Bug absent"
     * Button: "Download current"
