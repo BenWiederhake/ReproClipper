@@ -132,6 +132,7 @@ def project_delete(request, project_slug: str):
             project.current_version = None
             project.save()
             project.clipversion_set.all().delete()  # type: ignore[attr-defined]
+            project.base_file.delete()
             project.delete()
         return HttpResponseRedirect(reverse("index"))
     return render(request, "rc/project_delete.html", {"project": project})
