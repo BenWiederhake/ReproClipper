@@ -7,6 +7,10 @@ import secrets
 from . import data, models
 
 
+MINIMAL_INITIAL_SPAN_SIZE = len("<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>")
+INITIAL_SPAN_STEP_FACTOR = 2.6180339887  # 1 + golden ratio, for no particular reason
+
+
 class SpanInclusion(Enum):
     Untested = 1
     CannotBeCompletelyRemoved = 2
@@ -47,7 +51,21 @@ def slugify_name(name: str) -> str:
 
 
 def make_segment_list(file_size: int) -> List[Tuple[int, SpanInclusion]]:
-    raise NotImplementedError()
+    steps: List[int] = []
+    current_stride = MINIMAL_INITIAL_SPAN_SIZE
+    remaining = file_size
+    while remaining >= current_stride * 2:
+        steps.append(current_stride)
+        remaining -= current_stride * 2
+        current_stride = int(current_stride * INITIAL_SPAN_STEP_FACTOR + 0.5)
+    pre_segments: List[Tuple[int, SpanInclusion]] = []
+    for step in steps:
+        pre_segments.append((step, SpanInclusion.Untested))
+    middle: List[Tuple[int, SpanInclusion]] = []
+    if remaining:
+        middle.append((remaining, SpanInclusion.Untested))
+    segments = pre_segments + middle + pre_segments[::-1]
+    return segments
 
 
 def create_new_version(version: models.ClipVersion, /, bug_present: bool) -> models.ClipVersion:
