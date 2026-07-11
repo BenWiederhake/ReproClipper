@@ -1,0 +1,52 @@
+{% extends "rc/common.html" %}
+
+{% block title %}Project Overview{% endblock %}
+
+{% block content %}
+<style>
+  .btn-bug-present { background-color: #CFC; }
+  .btn-bug-absent  { background-color: #FCC; }
+</style>
+<a href="{% url 'index' %}">← Back to overview</a>
+<h1>Project "{{project.project_name}}"</h1>
+<p>Reduced from {{project.base_file.size}} bytes to {{project.current_version.parent_version.compute_size_linear}} bytes (v{{project.current_version.id}}). Started {{project.upload_datetime}}. Storing file at "{{project.base_file.name}}".</p>
+<p><a href="{% url 'next_open' project.slug %}">Link to always-current test version</a></p>
+
+<form method="get">
+<button type="submit">Reload</button>
+</form>
+
+{% if post_error is not None %}
+<div style="background: #F88">
+  ERROR: "{{post_error}}"
+</div>
+{% endif %}
+
+<ul>
+  {% for version in project.clipversion_set_ordered %}
+  <li>
+    Version {{version.id}}: <a href="{% url 'specific_version' project.slug version.id %}">Permalink</a>, {{version.compute_size_linear}} bytes{% if version.parent_version is not None %}, from version {{version.parent_version.id}}{% endif %}. Created {{version.created_datetime}}.<br>
+    {% if version.id == project.current_version.id %}
+      ACTIVE!
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="type" value="presence">
+        <input type="hidden" name="version" value="{{version.id}}">
+        <button type="submit" name="present" value="present" class="btn-bug-present">Bug PRESENT</button>
+        <button type="submit" name="present" value="absent" class="btn-bug-absent">Bug ABSENT</button>
+      </form>
+    {% else %}
+      <form action="#" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="type" value="selection">
+        <button type="submit" name="version" value="{{version.id}}">Set as active</button>
+      </form>
+    {% endif %}
+    Bug {{version.bug_present|yesno:"present,absent,untested"}}{% if version.decided_datetime is not None %}, decided on {{version.decided_datetime}}{% endif %}.
+    <br>
+    Loaded {{version.amount_of_times_loaded}} times{% if version.last_datetime_loaded is not None %}, most recently on {{version.last_datetime_loaded}}{% endif %}.
+    <!-- Raw spans: {{version.span_list_converted_to_str}}. -->
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

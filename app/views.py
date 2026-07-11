@@ -2,6 +2,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.timezone import now
+from typing import Optional
 
 from . import forms, logic, models
 
@@ -47,9 +48,11 @@ def new_project(request):
             project.current_version = version
             project.save()
 
-            # Finally, create the first test version (this overwrites project.current_version):
+            # Finally, create the first test version:
             sub_version = logic.create_new_unsaved_version(version)
             sub_version.save()
+            project.current_version = sub_version
+            project.save()
 
             project_url = reverse("project_index", kwargs=dict(project_slug=project.slug))
             return HttpResponseRedirect(project_url)
@@ -59,14 +62,61 @@ def new_project(request):
     return render(request, "rc/new.html", {"form": form, "suggestion": logic.suggest_slug()})
 
 
+def apply_project_action(project: models.ClipProject, req_type: str, req_version: str, req_present: str) -> Optional[str]:
+    try:
+        version_id: int = int(req_version)
+    except ValueError:
+        return f"Invalid POST presence version {req_version}, not a number?!"
+    # TODO: Inconsistent behavior, should return a post_error instead:
+    version = get_object_or_404(models.ClipVersion, id=version_id, parent_project=project)
+    if req_type == "presence":
+        if project.current_version.id != version_id:
+            return f"Invalid POST presence version {req_version}, not selected?!"
+        if req_present == "present":
+            version.bug_present = True
+        elif req_present == "absent":
+            version.bug_present = False
+        else:
+            return f"Invalid POST presence present-value {req_present}?!"
+        version.decided_datetime = now()
+        version.save()
+        sub_version = logic.create_new_unsaved_version(version)
+        sub_version.save()
+        # We need to make sure that 'sub_version' propagates to the caller, so we cannot easily fold this into logic.create_new_unsaved_version():
+        project.current_version = sub_version
+        project.save()
+        return None
+    elif req_type == "selection":
+        if project.current_version.id == version_id:
+            return f"Invalid POST selection version {req_version}, already selected?!"
+        project.current_version = version
+        project.save()
+        return None
+    else:
+        return f"Invalid POST type {req_type}?!"
+
+
 def project_index(request, project_slug: str):
-    project = get_object_or_404(models.ClipProject, slug=project_slug)
-    return render(request, "rc/project_index.html", {"project": "XXX"})
+    project: models.ClipProject = get_object_or_404(models.ClipProject, slug=project_slug)
+    post_error: Optional[str] = None
+    if request.method == "POST":
+        req_type = request.POST.get("type", "<NOVALUE>")
+        req_version = request.POST.get("version", "<NOVALUE>")
+        req_present = request.POST.get("present", "<NOVALUE>")
+        post_error = apply_project_action(project, req_type, req_version, req_present)
+    return render(request, "rc/project_index.html", {"project": project, "post_error": post_error})
 
 
 def next_open(request, project_slug: str):
-    return HttpResponse(f"Next open of project {project_slug}.")
+    project = get_object_or_404(models.ClipProject, slug=project_slug)
+    content = logic.reconstruct_content(project.current_version)
+    return HttpResponse(content)
+    # amount_of_times_loaded: models.Field = models.IntegerField(default=0)
 
 
 def specific_version(request, project_slug: str, version_id: int):
-    return HttpResponse(f"Version {version_id}, hopefully of project {project_slug}.")
+    project = get_object_or_404(models.ClipProject, slug=project_slug)
+    version = get_object_or_404(models.ClipVersion, id=version_id, parent_project=project)
+    content = logic.reconstruct_content(version)
+    return HttpResponse(content)
+    # amount_of_times_loaded: models.Field = models.IntegerField(default=0)

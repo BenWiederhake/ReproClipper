@@ -110,7 +110,8 @@ def resolve_span_test(spans: Spans, bug_present: bool) -> Spans:
             # However, we can't add it to new_spans yet, as it might collapse with surrounding spans.
         if span[1] == SpanInclusion.Skip and new_spans and new_spans[-1][1] == SpanInclusion.Skip:
             # Extend the old span:
-            new_spans[-1][0] += span[0]
+            old_length: int = new_spans[-1][0]
+            new_spans[-1] = (old_length + span[0], SpanInclusion.Skip)
             continue
         new_spans.append(span)
     if new_spans and new_spans[-1][1] == SpanInclusion.Skip:
@@ -142,7 +143,7 @@ def create_new_unsaved_version(parent_version: models.ClipVersion) -> models.Cli
     parent_spans = spans_decode(parent_version.span_list_converted_to_str)
     resolved_spans = resolve_span_test(parent_spans, parent_version.bug_present)
     index_of_biggest = find_biggest_untested_span(resolved_spans)
-    assert index_of_biggest is not None
+    assert index_of_biggest is not None  # TODO: "Congratulations, you're using the tool wrong"-view
     test_span = resolved_spans[index_of_biggest]
     resolved_spans[index_of_biggest] = (test_span[0], SpanInclusion.CurrentTest)
     version = models.ClipVersion(
@@ -156,3 +157,38 @@ def create_new_unsaved_version(parent_version: models.ClipVersion) -> models.Cli
         decided_datetime=None,
     )
     return version
+
+
+def reconstruct_content(version: models.ClipVersion) -> bytes:
+    base_content: bytes = version.parent_project.base_file.read()
+    spans: Spans = spans_decode(version.span_list_converted_to_str)
+    parts: List[bytes] = []
+    offset = 0
+    for span in spans:
+        start = offset
+        offset += span[0]
+        end = offset
+        if span[1] == SpanInclusion.CannotBeCompletelyRemoved:
+            pass  # Included
+        elif span[1] == SpanInclusion.CurrentTest:
+            continue  # Skipped, for now
+        elif span[1] == SpanInclusion.Skip:
+            continue  # Skipped
+        elif span[1] == SpanInclusion.Untested:
+            pass  # Included
+        else:
+            raise AssertionError(span)
+        parts.append(base_content[start:end])
+    return b"".join(parts)
+
+
+SKIPPED_SPANS: List[SpanInclusion] = [SpanInclusion.Untested, SpanInclusion.CannotBeCompletelyRemoved]
+
+
+def compute_size_linear(version: models.ClipVersion) -> int:
+    spans = spans_decode(version.span_list_converted_to_str)
+    return sum(s[0] for s in spans if s[1] in SKIPPED_SPANS)
+
+
+# Finally, overwrite the function in module "models":
+models.lazy_init_fn__compute_size_linear = compute_size_linear
