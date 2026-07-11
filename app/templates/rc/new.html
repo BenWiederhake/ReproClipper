@@ -1,0 +1,16 @@
+{% extends "rc/common.html" %}
+
+{% block title %}New Project{% endblock %}
+
+{% block content %}
+<h1>New project</h1>
+
+<p>Project name will default to the filename. Slug will default to something derived from the project name.</p>
+<p>Slug/name suggestion: {{suggestion}}</p>
+
+<form action="#" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form}}
+    <input type="submit">
+</form>
+{% endblock %}

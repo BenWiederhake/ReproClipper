@@ -2,13 +2,14 @@ from django.db import models
 
 # TODO: django.utils.timezone.now()
 
+MAX_SLUG_LENGTH = 50
 MAX_LENGTH_FILENAME = 200
 FILE_UPLOAD_STRFTIME = "uploads/%Y/%m/%d/"
 
 
 class ClipProject(models.Model):
     project_name = models.TextField()
-    slug = models.SlugField(max_length=50)
+    slug = models.SlugField(max_length=MAX_SLUG_LENGTH)
     # Even though there always must be a "current version", we have to create it NULLABLE,
     # or else we run into a chicken-and-egg problem:
     current_version = models.ForeignKey(to="ClipVersion", on_delete=models.RESTRICT, related_name="+none+", null=True)

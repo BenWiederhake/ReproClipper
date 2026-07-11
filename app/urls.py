@@ -10,5 +10,6 @@ project_patterns = [
 
 urlpatterns = [
     path("", views.index, name="index"),
+    path("new/", views.new_project, name="new_project"),
     path("p/<slug:project_slug>/", include(project_patterns)),
 ]
