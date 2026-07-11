@@ -1,12 +1,16 @@
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.timezone import now
 
 from . import forms, logic, models
 
 
 def index(request):
-    return render(request, "rc/index.html", {"foo": "bar"})
+    projects_sorted = models.ClipProject.objects.all().order_by(
+        "-upload_datetime", "-id"
+    )
+    return render(request, "rc/index.html", {"projects_sorted": projects_sorted})
 
 
 def new_project(request):
@@ -14,6 +18,9 @@ def new_project(request):
         form = forms.NewProjectForm(request.POST, request.FILES)
         if form.is_valid():
             cleaned_data = form.cleaned_data
+            # FIXME: Should use a transaction or something, so that here cannot be an inconsistent state.
+
+            # First, create an empty project:
             project = models.ClipProject(
                 project_name=cleaned_data["name"],
                 slug=cleaned_data["slug"],
@@ -22,8 +29,27 @@ def new_project(request):
                 base_file=cleaned_data["file"],
                 # upload_datetime is automatic
             )
-            # FIXME: Create TWO new ClipVersions!
             project.save()
+
+            # Next, create a "full" version, i.e. with all the data in it:
+            seg_list = logic.make_segment_list(cleaned_data["file"].size)
+            version = models.ClipVersion(
+                parent_project=project,
+                parent_version=None,
+                bug_present=True,  # Otherwise, project wouldn't have started
+                amount_of_times_loaded=0,
+                segment_list=seg_list,
+                last_datetime_loaded=None,
+                # created_datetime is automatic
+                decided_datetime=now(),
+            )
+            version.save()
+            project.current_version = version
+            project.save()
+
+            # Finally, create the first test version (this overwrites project.current_version):
+            logic.create_new_version(version, bug_present=True)
+
             project_url = reverse("project_index", kwargs=dict(project_slug=project.slug))
             return HttpResponseRedirect(project_url)
     else:

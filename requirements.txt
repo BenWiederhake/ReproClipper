@@ -1,1 +1,3 @@
 django==6.0.7
+django_stubs==6.0.6
+mypy==2.2.0

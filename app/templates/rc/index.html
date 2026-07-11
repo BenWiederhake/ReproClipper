@@ -3,5 +3,14 @@
 {% block title %}Overview{% endblock %}
 
 {% block content %}
-This is the index page. foo={{foo}}.
+<p><a href="{% url 'new_project' %}">Create new project</a>.</p>
+<p>Currectly {{projects_sorted|length}} projects configured:</p>
+
+<ul>
+  {% for project in projects_sorted %}
+  <li>
+    <a href="{% url 'project_index' project.slug %}">"{{project.project_name}}" (uploaded {{project.upload_datetime}})</a> ({{ project.clip_version_set|length }} versions)
+  </li>
+  {% endfor %}
+</ul>
 {% endblock %}

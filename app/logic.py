@@ -1,11 +1,20 @@
+from django.utils.text import slugify
+from enum import Enum
+from typing import List, Tuple
 import random
 import secrets
-from django.utils.text import slugify
 
 from . import data, models
 
 
-def suggest_single_slug():
+class SpanInclusion(Enum):
+    Untested = 1
+    CannotBeCompletelyRemoved = 2
+    Skip = 3
+    CurrentTest = 4
+
+
+def suggest_single_slug() -> str:
     words = random.choices(data.NICE_WORDS, k=2)
     number = random.randrange(1000, 10000)
     parts = []
@@ -15,7 +24,7 @@ def suggest_single_slug():
     return "".join(parts)
 
 
-def suggest_slug():
+def suggest_slug() -> str:
     for _ in range(3):
         slug = suggest_single_slug()
         try:
@@ -25,7 +34,7 @@ def suggest_slug():
     return secrets.token_urlsafe()
 
 
-def slugify_name(name):
+def slugify_name(name: str) -> str:
     assert models.MAX_SLUG_LENGTH > 1 + 4
     base_slug = slugify(name)[:models.MAX_SLUG_LENGTH - 4]
     for _ in range(3):
@@ -35,3 +44,11 @@ def slugify_name(name):
         except models.ClipProject.DoesNotExist:
             return slug
     return secrets.token_urlsafe()
+
+
+def make_segment_list(file_size: int) -> List[Tuple[int, SpanInclusion]]:
+    raise NotImplementedError()
+
+
+def create_new_version(version: models.ClipVersion, /, bug_present: bool) -> models.ClipVersion:
+    raise NotImplementedError()
