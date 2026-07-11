@@ -182,12 +182,9 @@ def reconstruct_content(version: models.ClipVersion) -> bytes:
     return b"".join(parts)
 
 
-SKIPPED_SPANS: List[SpanInclusion] = [SpanInclusion.Untested, SpanInclusion.CannotBeCompletelyRemoved]
-
-
 def compute_size_linear(version: models.ClipVersion) -> int:
     spans = spans_decode(version.span_list_converted_to_str)
-    return sum(s[0] for s in spans if s[1] in SKIPPED_SPANS)
+    return sum(s[0] for s in spans if s[1] != SpanInclusion.Skip)
 
 
 # Finally, overwrite the function in module "models":

@@ -111,16 +111,18 @@ def project_index(request, project_slug: str):
 def next_open(request, project_slug: str):
     project = get_object_or_404(models.ClipProject, slug=project_slug)
     content = logic.reconstruct_content(project.current_version)
+    project.current_version.amount_of_times_loaded += 1
+    project.current_version.save()
     return HttpResponse(content)
-    # amount_of_times_loaded: models.Field = models.IntegerField(default=0)
 
 
 def specific_version(request, project_slug: str, version_id: int):
     project = get_object_or_404(models.ClipProject, slug=project_slug)
     version = get_object_or_404(models.ClipVersion, id=version_id, parent_project=project)
     content = logic.reconstruct_content(version)
+    version.amount_of_times_loaded += 1
+    version.save()
     return HttpResponse(content)
-    # amount_of_times_loaded: models.Field = models.IntegerField(default=0)
 
 
 def project_delete(request, project_slug: str):
